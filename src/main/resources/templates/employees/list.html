@@ -121,13 +121,17 @@
                                 <td th:text="${employee.designation}"></td>
                                 <td th:text="${employee.dateOfJoining}"></td>
                                 <td>
-                                    <span th:class="'status-badge ' + 
-                                        ${employee.status == 'Active' ? 'status-active' : 
-                                        (employee.status == 'Inactive' ? 'status-inactive' : 
-                                        (employee.status == 'On Leave' ? 'status-onleave' : ''))}">
-                                        <i class="fas fa-circle me-1"></i>
-                                        <span th:text="${employee.status}"></span>
-                                    </span>
+                                    <form th:action="@{/employees/api/updateStatus}" method="post">
+                                        <input type="hidden" name="employeeId" th:value="${employee.name}">
+                                        <input type="hidden" name="status" th:value="${employee.status}">
+                                            <span th:class="'status-badge ' + 
+                                                ${employee.status == 'Active' ? 'status-active' : 
+                                                (employee.status == 'Inactive' ? 'status-inactive' : 
+                                                (employee.status == 'On Leave' ? 'status-onleave' : ''))}">
+                                                <i class="fas fa-circle me-1"></i>
+                                                <span th:text="${employee.status}" onclick="this.closest('form').submit()"></span>
+                                            </span>
+                                    </form>
                                 </td>
                                 <td th:text="${employee.company}"></td>
                                 <td class="text-end pe-4">

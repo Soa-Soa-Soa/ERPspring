@@ -50,6 +50,16 @@
                     <h2 class="mb-0">Import de données</h2>
                 </div>
 
+                <!-- Messages de succès/erreur -->
+                <div th:if="${success}" class="alert alert-success" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span th:text="${success}"></span>
+                </div>
+                <div th:if="${error}" class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span th:text="${error}"></span>
+                </div>
+
                 <div class="import-section">
                     <form th:action="@{/import/all}" method="post" enctype="multipart/form-data">
                         <!-- Fichier des employés -->
@@ -97,16 +107,6 @@
                             </button>
                         </div>
                     </form>
-
-                    <!-- Messages de succès/erreur -->
-                    <div th:if="${success}" class="alert alert-success" role="alert">
-                        <i class="fas fa-check-circle me-2"></i>
-                        <span th:text="${success}"></span>
-                    </div>
-                    <div th:if="${error}" class="alert alert-danger" role="alert">
-                        <i class="fas fa-exclamation-circle me-2"></i>
-                        <span th:text="${error}"></span>
-                    </div>
                 </div>
             </div>
         </div>

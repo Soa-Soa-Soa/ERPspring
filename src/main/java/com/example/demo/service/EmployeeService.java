@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.*;
 
@@ -17,14 +19,17 @@ public class EmployeeService {
     
     private final RestTemplate restTemplate;
     private List<String> departments = null;
+    private final ObjectMapper objectMapper;
 
-    public EmployeeService(RestTemplate restTemplate) {
+    public EmployeeService(RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
     }
 
     public List<EmployeeDTO> getEmployees(String sid) {
         String url = baseUrl + "/api/resource/Employee?fields=[\"*\"]" +
-                    "&order_by=\"employee_name asc\"";
+                    "&order_by=\"employee_name asc\"" +
+                    "&limit=100";
         
         HttpHeaders headers = new HttpHeaders();
         headers.set("Cookie", "sid=" + sid);
@@ -104,6 +109,33 @@ public class EmployeeService {
             
         } catch (Exception e) {
             throw new RuntimeException("Failed to fetch departments: " + e.getMessage());
+        }
+    }
+
+    public void updateStatus(String employeeId, String sid, String status) {
+        String url = baseUrl + "/api/resource/Employee/" + employeeId;
+
+        if (status.equals("Inactive")) {
+            status = "Active";
+        } else {
+            status = "Inactive";
+        }
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        ObjectNode employeeNode = objectMapper.createObjectNode()
+            .put("doctype", "Employee")
+            .put("name", employeeId)
+            .put("status", status);
+
+        HttpEntity<String> request = new HttpEntity<>(employeeNode.toString(), headers);
+
+        try {
+            restTemplate.exchange(url, HttpMethod.PUT, request, JsonNode.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de la désactivation de l'employé " + employeeId + ": " + e.getMessage(), e);
         }
     }
 

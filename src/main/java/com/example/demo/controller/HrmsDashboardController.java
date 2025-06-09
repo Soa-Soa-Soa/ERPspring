@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.YearMonth;
 import java.util.HashMap;
@@ -33,6 +34,7 @@ public class HrmsDashboardController {
     @GetMapping("/dashboard")
     public String showDashboard(
             @CookieValue(name = "sid", required = true) String sid,
+            @RequestParam(required = false) Integer year,
             Model model) {
         
         Map<String, Object> dashboardData = new HashMap<>();
@@ -55,12 +57,14 @@ public class HrmsDashboardController {
                 .sum());
         salaryStats.put("count", salarySlips.size());
         dashboardData.put("salaries", salaryStats);
-        
+
         // Statistiques pour les graphiques
-        var statistics = statisticsService.getYearlyStatistics(currentMonth.getYear(), sid);
+        int selectedYear = year != null ? year : currentMonth.getYear();
+        var statistics = statisticsService.getYearlyStatistics(selectedYear, sid);
         
         model.addAttribute("data", dashboardData);
         model.addAttribute("statistics", statistics);
+        model.addAttribute("selectedYear", selectedYear);
         
         return "hrms/dashboard";
     }

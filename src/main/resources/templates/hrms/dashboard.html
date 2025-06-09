@@ -129,7 +129,18 @@
         <!-- Section Graphiques -->
         <div class="row mb-4">
             <div class="col-12">
-                <h4 class="mb-3"><i class="fas fa-chart-line me-2 text-success"></i>Évolution des Salaires</h4>
+                <h4 class="mb-3"><i class="fas fa-chart-line me-2 text-success"></i>Évolution des Salaires : [[${selectedYear}]]</h4>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title">Évolution des Salaires</h5>
+                    <form th:action="@{/hrms/dashboard}" method="get" class="d-flex align-items-center gap-3">
+                        <select id="yearSelector" name="year" class="form-select" style="width: auto;" th:value="${selectedYear}">
+                            <option th:text=2025 th:value=2025>2025</option>
+                            <option th:text=2024 th:value=2024>2024</option>
+                            <option th:text=2023 th:value=2023>2023</option>
+                        </select>
+                        <input type="submit" value="Charger" class="btn btn-primary">
+                    </form>
+                </div>
                 <div class="row g-3">
                     <!-- Graphique Total des Salaires -->
                     <div class="col-12">
@@ -165,7 +176,7 @@
         new Chart(salaryTrendCtx, {
             type: 'line',
             data: {
-                labels: salaryData.map(item => item.monthName),
+                labels: salaryData.map(item => item.monthName + " " + item.year),
                 datasets: [{
                     label: 'Salaire Brut',
                     data: salaryData.map(item => parseFloat(item.totalGrossPay)),
@@ -266,7 +277,7 @@
         new Chart(componentsCtx, {
             type: 'line',
             data: {
-                labels: salaryData.map(item => item.monthName),
+                labels: salaryData.map(item => item.monthName + " " + item.year),
                 datasets: componentDatasets
             },
             options: {

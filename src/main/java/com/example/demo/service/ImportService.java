@@ -295,8 +295,9 @@ public class ImportService {
         ObjectNode employeeNode = objectMapper.createObjectNode()
             .put("doctype", "Employee")
             .put("first_name", employee.getPrenom())
+            .put("last_name", employee.getNom())
             .put("employee_name", employee.getPrenom() + " " + employee.getNom())
-            .put("gender", employee.getGenre().equals("Masculin") ? "Female" : "Male")
+            .put("gender", employee.getGenre().equals("Masculin") ? "Male" : "Female")
             .put("date_of_birth", dateNaissance.format(ERPNEXT_DATE_FORMATTER))
             .put("date_of_joining", dateEmbauche.format(ERPNEXT_DATE_FORMATTER))
             .put("status", "Active")
@@ -606,17 +607,8 @@ public class ImportService {
         HttpEntity<String> request = new HttpEntity<>(assignmentNode.toString(), headers);
         
         try {
-            // Vérifier si une affectation existe déjà
-            String existingAssignment = getExistingSalaryStructureAssignment(employeeId, startDate, sid);
-            
-            if (existingAssignment != null) {
-                // Mettre à jour l'affectation existante
-                url = url + "/" + existingAssignment;
-                restTemplate.exchange(url, HttpMethod.PUT, request, JsonNode.class);
-            } else {
-                // Créer une nouvelle affectation
-                restTemplate.exchange(url, HttpMethod.POST, request, JsonNode.class);
-            }
+            // Créer une nouvelle affectation
+            restTemplate.exchange(url, HttpMethod.POST, request, JsonNode.class);
         } catch (Exception e) {
             throw new RuntimeException("Erreur lors de la création/mise à jour de l'affectation de la structure salariale: " + e.getMessage(), e);
         }

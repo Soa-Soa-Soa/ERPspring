@@ -32,7 +32,8 @@ public class SalaryService {
     public List<SalarySlipDTO> getEmployeeSalarySlips(String sid, String employeeId) {
         String url = baseUrl + "/api/resource/Salary Slip?fields=[\"*\"]" +
                     "&filters=[[\"employee\",\"=\",\"" + employeeId + "\"]]" +
-                    "&order_by=\"posting_date desc\"";
+                    "&order_by=\"posting_date desc\"" +
+                    "&limit=100";
         
         HttpHeaders headers = new HttpHeaders();
         headers.set("Cookie", "sid=" + sid);
@@ -87,7 +88,7 @@ public class SalaryService {
     }
 
     public SalarySlipDTO getSalarySlipDetails(String sid, String slipId) {
-        String url = baseUrl + "/api/resource/Salary Slip/" + slipId + "?fields=[\"*\"]";
+        String url = baseUrl + "/api/resource/Salary Slip/" + slipId + "?fields=[\"*\"]&limit=100";
         
         HttpHeaders headers = new HttpHeaders();
         headers.set("Cookie", "sid=" + sid);
@@ -149,7 +150,8 @@ public class SalaryService {
                     "\"status\",\"company\",\"currency\",\"salary_structure\",\"mode_of_payment\"]" +
                     "&filters=[[\"start_date\",\"=\",\"" + startDate + "\"]]" +
                     "&filters=[[\"end_date\",\"=\",\"" + endDate + "\"]]" +
-                    "&order_by=\"posting_date desc\"";
+                    "&order_by=\"posting_date desc\"" +
+                    "&limit=100";
         
         logger.info("Fetching monthly salary slips with URL: {}", url);
         

@@ -5,6 +5,9 @@ import com.example.demo.service.EmployeeService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
+
+import java.lang.ProcessBuilder.Redirect;
 import java.util.List;
 
 @Controller
@@ -36,5 +39,16 @@ public class EmployeeController {
     public List<EmployeeDTO> getEmployeesApi(
             @CookieValue(name = "sid", required = true) String sid) {
         return employeeService.getEmployees(sid);
+    }
+
+    @PostMapping("/api/updateStatus")
+    @ResponseBody
+    public RedirectView desactivate(
+            @CookieValue(name = "sid", required = true) String sid,
+            @RequestParam String employeeId,
+            @RequestParam String status) {
+        employeeService.updateStatus(employeeId, sid, status);
+
+        return new RedirectView("/employees");
     }
 } 
