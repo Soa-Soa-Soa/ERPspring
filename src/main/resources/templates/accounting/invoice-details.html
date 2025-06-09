@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détails de la Facture - ERPNext Integration</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* Styles spécifiques à la page */
+        .invoice-header-card {
+            border-left: 4px solid var(--primary-color);
+        }
+        .status-badge {
+            font-size: 0.9rem;
+            padding: 0.5em 1em;
+            border-radius: 20px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        .badge-paid {
+            background-color: var(--success-color);
+            color: white;
+        }
+        .badge-unpaid {
+            background-color: #dc3545;
+            color: white;
+        }
+        .badge-partly {
+            background-color: #ffc107;
+            color: black;
+        }
+        .badge-hold {
+            background-color: #fd7e14;
+            color: white;
+        }
+        .badge-draft {
+            background-color: #6c757d;
+            color: white;
+        }
+        .due-date.overdue {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        .due-date.soon {
+            color: #fd7e14;
+            font-weight: 600;
+        }
+        .payment-form-card {
+            background-color: #f8f9fa;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <div layout:fragment="content" class="container py-4">
+        <!-- Messages d'alerte -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- En-tête -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">
+                    <i class="fas fa-file-invoice me-2 text-primary"></i>
+                    Détails de la Facture
+                </h2>
+                <p class="text-muted mb-0"><b>N°</b> <span th:text="${invoice.name}" class="fw-bold"></span></p>
+            </div>
+            <a th:href="@{/accounting/invoices}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Retour
+            </a>
+        </div>
+
+        <!-- Cartes d'informations -->
+        <div class="row mb-4">
+            <!-- Informations de base -->
+            <div class="col-md-4">
+                <div class="card invoice-header-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-truck me-3 text-muted"></i>
+                            <div>
+                                <p class="mb-0 small text-muted">Fournisseur</p>
+                                <p class="mb-0 fw-bold" th:text="${invoice.supplier_name}"></p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-calendar-alt me-3 text-muted"></i>
+                            <div>
+                                <p class="mb-0 small text-muted">Date</p>
+                                <p class="mb-0 fw-bold" th:text="${invoice.posting_date}"></p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-calendar-check me-3 text-muted"></i>
+                            <div>
+                                <p class="mb-0 small text-muted">Échéance</p>
+                                <p class="mb-0 fw-bold due-date" 
+                                   th:classappend="${T(java.time.LocalDate).parse(invoice.due_date).isBefore(T(java.time.LocalDate).now()) ? 'overdue' : 
+                                                   T(java.time.LocalDate).parse(invoice.due_date).isBefore(T(java.time.LocalDate).now().plusDays(7)) ? 'soon' : ''}"
+                                   th:text="${invoice.due_date}">
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statut de paiement -->
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">
+                            <i class="fas fa-money-bill-wave me-2"></i>Statut de Paiement
+                        </h5>
+                        <div class="mb-4">
+                            <span th:class="${'status-badge badge-' + 
+                                (invoice.payment_status == 'Paid' ? 'paid' : 
+                                invoice.payment_status == 'Partly Paid' ? 'partly' : 
+                                invoice.payment_status == 'On Hold' ? 'hold' : 
+                                invoice.payment_status == 'Draft' ? 'draft' : 'unpaid')}"
+                                th:text="${invoice.payment_status}">
+                            </span>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <p class="small text-muted mb-1">Total</p>
+                                <p class="fw-bold">
+                                    <span th:text="${#numbers.formatDecimal(invoice.total, 1, 2)}"></span>
+                                    <small class="text-muted" th:text="${invoice.currency}"></small>
+                                </p>
+                            </div>
+                            <div class="col-6">
+                                <p class="small text-muted mb-1">Restant dû</p>
+                                <p class="fw-bold">
+                                    <span th:text="${#numbers.formatDecimal(invoice.outstanding_amount, 1, 2)}"></span>
+                                    <small class="text-muted" th:text="${invoice.currency}"></small>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Formulaire de paiement -->
+            <div th:if="${invoice.payment_status == 'Unpaid'}" class="col-md-4">
+                <div class="card payment-form-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">
+                            <i class="fas fa-credit-card me-2"></i>Effectuer un paiement
+                        </h5>
+                        <form th:action="@{/accounting/invoices/{id}/pay(id=${invoice.name})}" method="post">
+                            <div class="mb-3">
+                                <label for="amount" class="form-label small text-muted">Montant</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="amount" name="amount"
+                                           th:max="${invoice.outstanding_amount}"
+                                           th:value="${invoice.outstanding_amount}"
+                                           step="0.01" required>
+                                    <span class="input-group-text" th:text="${invoice.currency}"></span>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="paymentDate" class="form-label small text-muted">Date</label>
+                                <input type="date" class="form-control" id="paymentDate" name="paymentDate"
+                                       th:value="${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="paymentMode" class="form-label small text-muted">Mode</label>
+                                <select class="form-select" id="paymentMode" name="paymentMode" required>
+                                    <option value="Cash">Espèces</option>
+                                    <option value="Bank">Chèque</option>
+                                    <option value="Wire Transfer">Virement</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label for="reference" class="form-label small text-muted">Référence</label>
+                                <input type="text" class="form-control" id="reference" name="reference"
+                                       placeholder="N° de chèque, référence..." required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-check-circle me-2"></i> Enregistrer le paiement
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Articles de la facture -->
+        <div class="card shadow">
+            <div class="card-header bg-white border-bottom-0">
+                <h5 class="mb-0">
+                    <i class="fas fa-boxes me-2 text-primary"></i>
+                    Articles
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Code</th>
+                                <th>Description</th>
+                                <th class="text-center">Quantité</th>
+                                <th class="text-center">Unité</th>
+                                <th class="text-end">Prix Unitaire</th>
+                                <th class="text-end pe-4">Montant</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="item : ${invoice.items}">
+                                <td class="ps-4 fw-bold" th:text="${item.item_code}"></td>
+                                <td th:text="${item.item_name}"></td>
+                                <td class="text-center" th:text="${item.qty}"></td>
+                                <td class="text-center" th:text="${item.uom}"></td>
+                                <td class="text-end">
+                                    <span th:text="${#numbers.formatDecimal(item.rate, 1, 2)}"></span>
+                                    <small class="text-muted" th:text="${invoice.currency}"></small>
+                                </td>
+                                <td class="text-end pe-4 fw-bold">
+                                    <span th:text="${#numbers.formatDecimal(item.amount, 1, 2)}"></span>
+                                    <small class="text-muted" th:text="${invoice.currency}"></small>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="bg-light">
+                                <td colspan="4"></td>
+                                <td class="text-end fw-bold">Total:</td>
+                                <td class="text-end pe-4 fw-bold">
+                                    <span th:text="${#numbers.formatDecimal(invoice.total, 1, 2)}"></span>
+                                    <small class="text-muted" th:text="${invoice.currency}"></small>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animation des lignes du tableau
+            const rows = document.querySelectorAll('tbody tr');
+            rows.forEach((row, index) => {
+                row.style.animationDelay = `${index * 0.05}s`;
+            });
+        });
+    </script>
+</body>
+</html>

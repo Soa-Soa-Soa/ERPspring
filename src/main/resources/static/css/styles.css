@@ -1,0 +1,277 @@
+:root {
+    --primary-color: #5d78ff; /* Bleu moderne */
+    --primary-dark: #3a56d4;
+    --secondary-color: #6c5ce7; /* Violet doux */
+    --background-color: #f0f2f5; /* Fond très légèrement grisé */
+    --card-color: #ffffff;
+    --text-color: #2d3436;
+    --text-light: #636e72;
+    --success-color: #00b894; /* Vert moderne */
+    --border-radius: 12px;
+    --box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+.navbar {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    box-shadow: 0 4px 20px rgba(93, 120, 255, 0.15);
+    padding: 0.8rem 0;
+}
+
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+}
+
+.navbar-brand i {
+    font-size: 1.5rem;
+}
+
+.card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background-color: var(--card-color);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1.25rem 1.5rem;
+    font-weight: 600;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    border-radius: var(--border-radius);
+    padding: 0.5rem 1.25rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+.json-response {
+    background-color: #f8f9fa;
+    border-radius: var(--border-radius);
+    padding: 1.25rem;
+    font-family: 'Fira Code', monospace;
+    border-left: 4px solid var(--primary-color);
+    background-color: #fcfdff;
+}
+
+.cookie-info {
+    word-break: break-all;
+    background: #f1f3f9;
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin-top: 0.5rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85em;
+    color: var(--text-color);
+}
+
+.success-badge {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.75rem;
+    background-color: var(--success-color);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.alert {
+    border-radius: var(--border-radius);
+    border: none;
+}
+
+.alert-success {
+    background-color: rgba(0, 184, 148, 0.1);
+    color: #007a63;
+}
+
+.status-card {
+    border-left: 4px solid var(--success-color);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+    animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
+    }
+}
+
+/* Styles pour les cartes de raccourcis */
+.shortcut-card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+    text-decoration: none !important;
+    color: var(--text-color);
+    height: 100%;
+}
+
+.shortcut-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    background-color: rgba(93, 120, 255, 0.03);
+}
+
+.shortcut-card .icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.shortcut-card h5 {
+    transition: color 0.2s ease;
+}
+
+.shortcut-card:hover h5 {
+    color: var(--primary-color);
+}
+
+/* Couleurs des icônes */
+.bg-primary { background-color: var(--primary-color) !important; }
+.bg-success { background-color: var(--success-color) !important; }
+.bg-warning { background-color: #f39c12 !important; }
+.bg-info { background-color: #00cec9 !important; }
+
+/* Styles supplémentaires pour la page fournisseurs */
+.avatar-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.flag-icon {
+    width: 20px;
+    height: 15px;
+    display: inline-block;
+    background-size: cover;
+    margin-right: 8px;
+    box-shadow: 0 0 1px rgba(0,0,0,0.3);
+}
+
+.flag-icon-fr { background-image: url('https://flagcdn.com/w20/fr.png'); }
+.flag-icon-de { background-image: url('https://flagcdn.com/w20/de.png'); }
+.flag-icon-us { background-image: url('https://flagcdn.com/w20/us.png'); }
+.flag-icon-gb { background-image: url('https://flagcdn.com/w20/gb.png'); }
+.flag-icon-es { background-image: url('https://flagcdn.com/w20/es.png'); }
+
+.table-hover tbody tr:hover {
+    background-color: rgba(93, 120, 255, 0.05);
+}
+
+.table thead th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    color: var(--text-light);
+}
+
+.supplier-row {
+    animation: fadeIn 0.3s ease-out forwards;
+    opacity: 0;
+}
+
+@keyframes fadeIn {
+    to { opacity: 1; }
+}
+
+/* Responsive table */
+@media (max-width: 768px) {
+    .table-responsive {
+        border: 0;
+    }
+    
+    .table thead {
+        display: none;
+    }
+    
+    .table tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: var(--border-radius);
+    }
+    
+    .table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        margin-right: 1rem;
+        color: var(--text-light);
+    }
+}

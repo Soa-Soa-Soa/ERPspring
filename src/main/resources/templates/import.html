@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import de données - ERPNext Integration</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .import-section {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .custom-file-label::after {
+            content: "Parcourir";
+        }
+        .btn-import {
+            background: var(--primary-color);
+            border: none;
+            padding: 0.75rem 2rem;
+            font-weight: 500;
+        }
+        .file-format {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 0.5rem;
+        }
+        .alert {
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <div class="container py-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex align-items-center mb-4">
+                    <i class="fas fa-file-import me-3 text-primary" style="font-size: 1.5rem;"></i>
+                    <h2 class="mb-0">Import de données</h2>
+                </div>
+
+                <div class="import-section">
+                    <form th:action="@{/import/all}" method="post" enctype="multipart/form-data">
+                        <!-- Fichier des employés -->
+                        <div class="form-group">
+                            <label for="employeesFile" class="form-label">
+                                <i class="fas fa-users me-2 text-primary"></i>
+                                Fichier des employés
+                            </label>
+                            <input type="file" class="form-control" id="employeesFile" name="employeesFile" accept=".csv" required>
+                            <div class="file-format">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Format attendu : ID, Nom, Prénom, Genre, Date d'embauche, Date de naissance, Société
+                            </div>
+                        </div>
+
+                        <!-- Fichier des structures salariales -->
+                        <div class="form-group">
+                            <label for="structuresFile" class="form-label">
+                                <i class="fas fa-sitemap me-2 text-primary"></i>
+                                Fichier des structures salariales
+                            </label>
+                            <input type="file" class="form-control" id="structuresFile" name="structuresFile" accept=".csv" required>
+                            <div class="file-format">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Format attendu : Structure, Nom, Abréviation, Type, Valeur, Société
+                            </div>
+                        </div>
+
+                        <!-- Fichier des salaires -->
+                        <div class="form-group">
+                            <label for="salariesFile" class="form-label">
+                                <i class="fas fa-money-bill-wave me-2 text-primary"></i>
+                                Fichier des salaires
+                            </label>
+                            <input type="file" class="form-control" id="salariesFile" name="salariesFile" accept=".csv" required>
+                            <div class="file-format">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Format attendu : Mois, ID Employé, Salaire de base, Structure salariale
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 col-md-6 mx-auto">
+                            <button type="submit" class="btn btn-primary btn-import">
+                                <i class="fas fa-upload me-2"></i>Importer les données
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Messages de succès/erreur -->
+                    <div th:if="${success}" class="alert alert-success" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span th:text="${success}"></span>
+                    </div>
+                    <div th:if="${error}" class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <span th:text="${error}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Animation des fichiers sélectionnés
+        document.querySelectorAll('input[type="file"]').forEach(input => {
+            input.addEventListener('change', function(e) {
+                const fileName = e.target.files[0]?.name || 'Aucun fichier choisi';
+                const parent = this.parentElement;
+                const format = parent.querySelector('.file-format');
+                
+                if (this.files[0]) {
+                    format.innerHTML = `<i class="fas fa-check-circle text-success me-1"></i>Fichier sélectionné : ${fileName}`;
+                } else {
+                    format.innerHTML = format.dataset.original;
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

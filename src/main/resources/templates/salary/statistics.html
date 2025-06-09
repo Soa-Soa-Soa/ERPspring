@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistiques des Salaires</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .table {
+            --bs-table-striped-bg: rgba(0, 0, 0, 0.02);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .table thead th {
+            background: #2c3e50;
+            color: white;
+            font-weight: 500;
+            border-bottom: none;
+            padding: 1rem;
+            white-space: nowrap;
+        }
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .amount {
+            font-family: 'Inter', monospace;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        .total-row {
+            background-color: #f8f9fa !important;
+            font-weight: 600;
+            border-top: 2px solid #dee2e6;
+        }
+        .component-details {
+            font-size: 0.9em;
+            color: #666;
+            margin: 0.2rem 0;
+        }
+        .component-group {
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 4px;
+        }
+        .component-group-title {
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 0.3rem;
+            font-size: 0.85em;
+            text-transform: uppercase;
+        }
+        .component-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.2rem 0;
+        }
+        .component-name {
+            color: #666;
+        }
+        .component-value {
+            font-family: 'Inter', monospace;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        .month-name {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        .table-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .year-selector {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+        }
+        body {
+            background-color: #f8f9fa;
+        }
+        .page-header {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+        }
+        a {
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <div class="container py-4">
+        <!-- En-tête -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="page-header">
+                    <i class="fas fa-chart-line me-2 text-primary"></i>
+                    Statistiques des Salaires
+                </h2>
+            </div>
+        </div>
+
+        <!-- Sélecteur d'année -->
+        <div class="year-selector">
+            <form method="get" class="d-flex align-items-center gap-3">
+                <label for="year" class="form-label mb-0">Année :</label>
+                <select id="year" name="year" class="form-select" style="width: 150px;" onchange="this.form.submit()">
+                    <option th:each="y : ${availableYears}"
+                            th:value="${y}"
+                            th:text="${y}"
+                            th:selected="${y == selectedYear}">
+                    </option>
+                </select>
+            </form>
+        </div>
+
+        <!-- Tableau des statistiques -->
+        <div class="table-container">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Mois</th>
+                            <th>Nombre d'Employés</th>
+                            <th>Composants de Salaire</th>
+                            <th class="text-end">Total Brut</th>
+                            <th class="text-end">Total Déductions</th>
+                            <th class="text-end">Total Net</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="stat : ${statistics}"    
+                            th:attr="data-href=@{'/employees/salary/summary'(year=${selectedYear}, month=${stat.month})}"
+                            style="cursor: pointer;"
+                            onclick="window.location=this.getAttribute('data-href')">                    
+                            <td>
+                                <span class="month-name" th:text="${stat.monthName}"></span>
+                            </td>
+                            <td th:text="${stat.employeeCount}"></td>
+                            <td>
+                                <div class="component-details">
+                                    <!-- Gains -->
+                                    <div class="component-group" th:if="${stat.earningsComponents != null and !stat.earningsComponents.isEmpty()}">
+                                        <div class="component-group-title">Gains</div>
+                                        <div th:each="component : ${stat.earningsComponents}" 
+                                             class="component-item">
+                                            <span class="component-name" th:text="${component.key}"></span>
+                                            <span class="component-value">
+                                                <span th:text="${#numbers.formatDecimal(component.value, 0, 'COMMA', 2, 'POINT')}"></span>
+                                                <small>USD</small>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <!-- Déductions -->
+                                    <div class="component-group" th:if="${stat.deductionsComponents != null and !stat.deductionsComponents.isEmpty()}">
+                                        <div class="component-group-title">Déductions</div>
+                                        <div th:each="component : ${stat.deductionsComponents}" 
+                                             class="component-item">
+                                            <span class="component-name" th:text="${component.key}"></span>
+                                            <span class="component-value">
+                                                <span th:text="${#numbers.formatDecimal(component.value, 0, 'COMMA', 2, 'POINT')}"></span>
+                                                <small>USD</small>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <span class="amount" th:text="${#numbers.formatDecimal(stat.totalGrossPay, 0, 'COMMA', 2, 'POINT')}"></span>
+                            </td>
+                            <td class="text-end">
+                                <span class="amount" th:text="${#numbers.formatDecimal(stat.totalDeductions, 0, 'COMMA', 2, 'POINT')}"></span>
+                            </td>
+                            <td class="text-end">
+                                <span class="amount" th:text="${#numbers.formatDecimal(stat.totalNetPay, 0, 'COMMA', 2, 'POINT')}"></span>
+                            </td>
+                        </tr>
+                        <!-- Ligne des totaux -->
+                        <tr class="total-row">
+                            <td colspan="2">Total Annuel</td>
+                            <td></td>
+                            <td class="text-end">
+                                <span class="amount" th:text="${#numbers.formatDecimal(#aggregates.sum(statistics.![totalGrossPay]), 0, 'COMMA', 2, 'POINT')}"></span>
+                            </td>
+                            <td class="text-end">
+                                <span class="amount" th:text="${#numbers.formatDecimal(#aggregates.sum(statistics.![totalDeductions]), 0, 'COMMA', 2, 'POINT')}"></span>
+                            </td>
+                            <td class="text-end">
+                                <span class="amount" th:text="${#numbers.formatDecimal(#aggregates.sum(statistics.![totalNetPay]), 0, 'COMMA', 2, 'POINT')}"></span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

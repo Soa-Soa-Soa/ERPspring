@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!-- Navbar Fragment -->
+    <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark">
+            <div class="container">
+                <a class="navbar-brand" href="/dashboard">
+                    <i class="fas fa-project-diagram me-2"></i>
+                    <span>BENCH Integration</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <!-- Menu ERPNext -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="erpnextDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-building me-2"></i>ERPNext
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a href="/erp/dashboard" class="dropdown-item">
+                                        <i class="fas fa-building me-2"></i>Dashboard
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="/suppliers" class="dropdown-item">
+                                        <i class="fas fa-truck me-2"></i>Fournisseurs
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="/devis/form" class="dropdown-item">
+                                        <i class="fas fa-file-invoice me-2"></i>Nouveau Devis
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="/accounting/invoices" class="dropdown-item">
+                                        <i class="fas fa-file-invoice-dollar me-2"></i>Factures
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Menu HRMS -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="hrmsDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-id-badge me-2"></i>HRMS
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a href="/hrms/dashboard" class="dropdown-item">
+                                        <i class="fas fa-id-badge me-2"></i>Dashboard
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="/employees" class="dropdown-item">
+                                        <i class="fas fa-users me-2"></i>Employés
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="/employees/salary/summary" class="dropdown-item">
+                                        <i class="fas fa-money-bill-wave me-2"></i>Salaires
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="/salary/statistics" class="dropdown-item">
+                                        <i class="fas fa-chart-line me-2"></i>Statistiques
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Import -->
+                        <li class="nav-item">
+                            <a href="/import" class="nav-link">
+                                <i class="fas fa-file-import me-2"></i>Import
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle me-1"></i>
+                                <span th:text="${username}"></span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="/status"><i class="fas fa-cog me-2"></i>Details de connexion</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" th:href="${@environment.getProperty('erpnext.base-url') + '/login'}"><i class="fas fa-external-link-alt me-2"></i>Accéder à ERPNext</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/login"><i class="fas fa-sign-out-alt me-2"></i>Déconnexion</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+    </nav>
+</body>
+</html>

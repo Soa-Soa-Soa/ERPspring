@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>Formulaire de devis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* Styles cohérents avec les autres pages */
+        .form-container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .form-title {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+        
+        .item-row {
+            background-color: #f8fafc;
+            border-radius: 6px;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+            border-left: 3px solid var(--primary-color);
+            position: relative;
+        }
+        
+        .remove-row-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+        }
+        
+        .btn-submit {
+            background-color: var(--primary-color);
+            border: none;
+            padding: 0.5rem 1.5rem;
+            font-weight: 500;
+        }
+        
+        .btn-submit:hover {
+            background-color: var(--primary-dark-color);
+        }
+        
+        .btn-add-item {
+            background-color: #e2e8f0;
+            color: #2d3748;
+            border: none;
+            font-weight: 500;
+        }
+        
+        .btn-add-item:hover {
+            background-color: #cbd5e0;
+        }
+        
+        .invalid-feedback {
+            font-size: 0.85rem;
+        }
+        
+        .alert {
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <div class="container mt-4">
+        <div class="form-container">
+            <h1 class="form-title text-center">Formulaire de devis</h1>
+            
+            <!-- Message de succès -->
+            <div th:if="${message}" class="alert alert-success" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                <span th:text="${message}"></span>
+            </div>
+            <!-- Message d'erreur -->
+            <div th:if="${error}" class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <span th:text="${error}"></span>
+            </div>
+            
+            <form th:action="@{/devis}" method="post" class="needs-validation" novalidate>
+                <div class="mb-4">
+                    <label for="fournisseur-select" class="form-label">Sélectionnez un fournisseur</label>
+                    <select class="form-select" id="fournisseur-select" name="supplier" required>
+                        <option value="">Fournisseur</option>
+                        <option th:each="supplierItem : ${suppliers}" 
+                                th:value="${supplierItem.name}" 
+                                th:text="${supplierItem.supplier_name}"></option>
+                    </select>
+                    <div class="invalid-feedback">Veuillez sélectionner un fournisseur.</div>
+                </div>
+                
+                <div class="row mb-4 g-3">
+                    <div class="col-md-6">
+                        <label for="date" class="form-label">Date</label>
+                        <input type="date" class="form-control" name="date" id="date" required>
+                        <div class="invalid-feedback">Veuillez sélectionner une date.</div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="valid_till" class="form-label">Validité</label>
+                        <input type="date" class="form-control" name="valid_till" id="valid_till" required>
+                        <div class="invalid-feedback">Veuillez sélectionner une date de validité.</div>
+                    </div>
+                </div>
+                
+                <!-- Section des items avec possibilité d'ajout dynamique -->
+                <div id="items-container">
+                    <div class="item-row mb-4">
+                        <div class="mb-3">
+                            <label for="item-select-0" class="form-label">Item</label>
+                            <select class="form-select item-select" id="item-select-0" name="items[0].item" required>
+                                <option value="">-- Sélectionnez un item --</option>
+                                <option th:each="Item : ${items}" 
+                                        th:value="${Item.item_name}" 
+                                        th:text="${Item.item_name}"></option>
+                            </select>
+                            <div class="invalid-feedback">Veuillez sélectionner un item.</div>
+                        </div>
+                        
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label for="qty-0" class="form-label">Quantité</label>
+                                <input type="number" class="form-control" name="items[0].qty" id="qty-0" required>
+                                <div class="invalid-feedback">Veuillez entrer une quantité.</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="rate-0" class="form-label">Montant</label>
+                                <input type="number" class="form-control" name="items[0].rate" id="rate-0" required>
+                                <div class="invalid-feedback">Veuillez entrer un montant.</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="warehouse-select-0" class="form-label">Entrepôt</label>
+                                <select class="form-select" id="warehouse-select-0" name="items[0].warehouses" required>
+                                    <option value="">-- Sélectionnez un entrepôt --</option>
+                                    <option th:each="Item : ${warehouses}" 
+                                            th:value="${Item.name}" 
+                                            th:text="${Item.name}"></option>
+                                </select>
+                                <div class="invalid-feedback">Veuillez sélectionner un entrepôt.</div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-danger btn-sm remove-row-btn">
+                            <i class="fas fa-trash-alt me-1"></i> Supprimer
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <button type="button" id="add-row-btn" class="btn btn-add-item">
+                        <i class="fas fa-plus-circle me-2"></i> Ajouter un item
+                    </button>
+                </div>
+                
+                <button type="submit" class="btn btn-submit w-100">
+                    <i class="fas fa-paper-plane me-2"></i> Soumettre
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Activation de la validation Bootstrap
+        (function () {
+            'use strict';
+            var forms = document.querySelectorAll('.needs-validation');
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+        
+        // Gestion de l'ajout dynamique de lignes
+        document.addEventListener('DOMContentLoaded', function() {
+            const itemsContainer = document.getElementById('items-container');
+            const addRowBtn = document.getElementById('add-row-btn');
+            let rowCount = 1;
+            
+            addRowBtn.addEventListener('click', function() {
+                const newRow = document.createElement('div');
+                newRow.className = 'item-row mb-4';
+                newRow.innerHTML = `
+                    <div class="mb-3">
+                        <label for="item-select-${rowCount}" class="form-label">Item</label>
+                        <select class="form-select item-select" id="item-select-${rowCount}" name="items[${rowCount}].item" required>
+                            <option value="">-- Sélectionnez un item --</option>
+                            ${document.querySelector('.item-select').innerHTML.split('<option value="">-- Sélectionnez un item --</option>')[1]}
+                        </select>
+                        <div class="invalid-feedback">Veuillez sélectionner un item.</div>
+                    </div>
+                    
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label for="qty-${rowCount}" class="form-label">Quantité</label>
+                            <input type="number" class="form-control" name="items[${rowCount}].qty" id="qty-${rowCount}" required>
+                            <div class="invalid-feedback">Veuillez entrer une quantité.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="rate-${rowCount}" class="form-label">Montant</label>
+                            <input type="number" class="form-control" name="items[${rowCount}].rate" id="rate-${rowCount}" required>
+                            <div class="invalid-feedback">Veuillez entrer un montant.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="warehouse-select-${rowCount}" class="form-label">Entrepôt</label>
+                            <select class="form-select" id="warehouse-select-${rowCount}" name="items[${rowCount}].warehouses" required>
+                                <option value="">-- Sélectionnez un entrepôt --</option>
+                                ${document.querySelector('#warehouse-select-0').innerHTML.split('<option value="">-- Sélectionnez un entrepôt --</option>')[1]}
+                            </select>
+                            <div class="invalid-feedback">Veuillez sélectionner un entrepôt.</div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-danger btn-sm remove-row-btn">
+                        <i class="fas fa-trash-alt me-1"></i> Supprimer
+                    </button>
+                `;
+                
+                itemsContainer.appendChild(newRow);
+                rowCount++;
+                
+                // Ajout du gestionnaire d'événement pour le bouton de suppression
+                newRow.querySelector('.remove-row-btn').addEventListener('click', function() {
+                    itemsContainer.removeChild(newRow);
+                });
+            });
+            
+            // Gestionnaire pour supprimer la première ligne si elle existe
+            document.querySelector('.remove-row-btn')?.addEventListener('click', function() {
+                itemsContainer.removeChild(this.closest('.item-row'));
+            });
+        });
+    </script>
+</body>
+</html>

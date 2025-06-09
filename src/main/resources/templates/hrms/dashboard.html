@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard HRMS - ERPNext Integration</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <div class="container py-4">
+        <!-- En-tête -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="mb-3">
+                    <i class="fas fa-id-badge me-2 text-success"></i>
+                    Dashboard HRMS
+                </h2>
+            </div>
+        </div>
+
+        <!-- Section Accès Rapide -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h4 class="mb-3"><i class="fas fa-rocket me-2 text-success"></i>Accès Rapide</h4>
+                <div class="row g-3">
+                    <!-- Carte Employés -->
+                    <div class="col-md-6">
+                        <a href="/employees" class="card shortcut-card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="icon-circle bg-success">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="ms-3">
+                                        <h5 class="mb-1">Gérer les Employés</h5>
+                                        <p class="text-muted mb-0">Liste et détails des employés</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <!-- Carte Salaires -->
+                    <div class="col-md-6">
+                        <a href="/employees/salary/summary" class="card shortcut-card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="icon-circle bg-primary">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </div>
+                                    <div class="ms-3">
+                                        <h5 class="mb-1">Gérer les Salaires</h5>
+                                        <p class="text-muted mb-0">Suivi et gestion des salaires</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Statistiques -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h4 class="mb-3"><i class="fas fa-chart-bar me-2 text-success"></i>Statistiques RH</h4>
+                <div class="row g-3">
+                    <!-- Statistiques Employés -->
+                    <div class="col-md-6">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="icon-circle bg-info me-3">
+                                        <i class="fas fa-user-tie text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="card-title mb-0">Effectifs</h5>
+                                    </div>
+                                </div>
+                                <div class="ms-5 ps-3">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Total employés:</span>
+                                        <span th:text="${data != null and data.employees != null} ? ${data.employees.total} : '0'">0</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted">Actifs:</span>
+                                        <span th:text="${data != null and data.employees != null} ? ${data.employees.active} : '0'">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Statistiques Salaires -->
+                    <div class="col-md-6">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="icon-circle bg-success me-3">
+                                        <i class="fas fa-dollar-sign text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="card-title mb-0">Salaires du Mois</h5>
+                                    </div>
+                                </div>
+                                <div class="ms-5 ps-3">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Total:</span>
+                                        <span th:text="${data != null and data.salaries != null} ? ${#numbers.formatDecimal(data.salaries.total, 1, 'COMMA', 2, 'POINT')} : '0.00'">0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted">Fiches de paie:</span>
+                                        <span th:text="${data != null and data.salaries != null} ? ${data.salaries.count} : '0'">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Graphiques -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h4 class="mb-3"><i class="fas fa-chart-line me-2 text-success"></i>Évolution des Salaires</h4>
+                <div class="row g-3">
+                    <!-- Graphique Total des Salaires -->
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title mb-3">Évolution du Total des Salaires</h5>
+                                <canvas id="salaryTrendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Graphique Composants de Salaire -->
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title mb-3">Évolution des Composants de Salaire</h5>
+                                <canvas id="salaryComponentsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:inline="javascript">
+        // Données pour les graphiques
+        const salaryData = /*[[${statistics}]]*/ [];
+        
+        // Configuration du graphique d'évolution des salaires totaux
+        const salaryTrendCtx = document.getElementById('salaryTrendChart').getContext('2d');
+        new Chart(salaryTrendCtx, {
+            type: 'line',
+            data: {
+                labels: salaryData.map(item => item.monthName),
+                datasets: [{
+                    label: 'Salaire Brut',
+                    data: salaryData.map(item => parseFloat(item.totalGrossPay)),
+                    borderColor: '#28a745',
+                    tension: 0.1,
+                    fill: false
+                }, {
+                    label: 'Déductions',
+                    data: salaryData.map(item => parseFloat(item.totalDeductions)),
+                    borderColor: '#dc3545',
+                    tension: 0.1,
+                    fill: false
+                }, {
+                    label: 'Salaire Net',
+                    data: salaryData.map(item => parseFloat(item.totalNetPay)),
+                    borderColor: '#17a2b8',
+                    tension: 0.1,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Évolution mensuelle des salaires'
+                    },
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return new Intl.NumberFormat('fr-FR', {
+                                    style: 'currency',
+                                    currency: 'USD'
+                                }).format(value);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Préparation des données pour les composants
+        const earningsData = {};
+        const deductionsData = {};
+        
+        // Initialiser les tableaux pour chaque composant
+        salaryData.forEach(month => {
+            Object.entries(month.earningsComponents).forEach(([component, value]) => {
+                if (!earningsData[component]) {
+                    earningsData[component] = new Array(salaryData.length).fill(0);
+                }
+            });
+            Object.entries(month.deductionsComponents).forEach(([component, value]) => {
+                if (!deductionsData[component]) {
+                    deductionsData[component] = new Array(salaryData.length).fill(0);
+                }
+            });
+        });
+        
+        // Remplir les données
+        salaryData.forEach((month, index) => {
+            Object.entries(month.earningsComponents).forEach(([component, value]) => {
+                earningsData[component][index] = parseFloat(value);
+            });
+            Object.entries(month.deductionsComponents).forEach(([component, value]) => {
+                deductionsData[component][index] = parseFloat(value);
+            });
+        });
+
+        // Configuration du graphique des composants de salaire
+        const componentsCtx = document.getElementById('salaryComponentsChart').getContext('2d');
+        
+        // Création des datasets pour les composants
+        const componentDatasets = [
+            ...Object.entries(earningsData).map(([name, data], index) => ({
+                label: name + ' (Gain)',
+                data: data,
+                borderColor: `hsl(${index * 30}, 70%, 50%)`,
+                tension: 0.1,
+                fill: false
+            })),
+            ...Object.entries(deductionsData).map(([name, data], index) => ({
+                label: name + ' (Déduction)',
+                data: data,
+                borderColor: `hsl(${index * 30 + 180}, 70%, 50%)`,
+                tension: 0.1,
+                fill: false,
+                borderDash: [5, 5]
+            }))
+        ];
+
+        new Chart(componentsCtx, {
+            type: 'line',
+            data: {
+                labels: salaryData.map(item => item.monthName),
+                datasets: componentDatasets
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Évolution des composants de salaire'
+                    },
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return new Intl.NumberFormat('fr-FR', {
+                                    style: 'currency',
+                                    currency: 'USD'
+                                }).format(value);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Vérification d'authentification
+        function checkAuth() {
+            fetch('/check-auth')
+                .then(response => response.json())
+                .then(isAuthenticated => {
+                    if (!isAuthenticated) {
+                        window.location.href = '/login';
+                    }
+                });
+        }
+        setInterval(checkAuth, 300000);
+        
+        // Animation au chargement
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.classList.add('animate__animated', 'animate__fadeIn');
+            });
+        });
+    </script>
+</body>
+</html>

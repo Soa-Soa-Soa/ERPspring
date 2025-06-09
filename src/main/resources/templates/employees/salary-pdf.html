@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fiche de Paie</title>
+    <style type="text/css">
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            font-size: 12px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #000;
+        }
+        .company-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .document-title {
+            font-size: 16px;
+            color: #333;
+        }
+        .info-section {
+            margin-bottom: 20px;
+        }
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .info-table td {
+            padding: 5px;
+            vertical-align: top;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #666;
+            width: 30%;
+        }
+        .summary-box {
+            background-color: #f5f5f5;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .summary-table td {
+            padding: 5px;
+        }
+        .summary-table .total-row {
+            border-top: 1px solid #000;
+            font-weight: bold;
+        }
+        .components-section {
+            margin-bottom: 20px;
+        }
+        .components-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #000;
+        }
+        .components-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .components-table td {
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .component-formula {
+            font-size: 10px;
+            color: #666;
+        }
+        .amount {
+            text-align: right;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 10px;
+            border-top: 1px solid #000;
+            font-size: 10px;
+            color: #666;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company-name" th:text="${salarySlip.company}">Nom de l'entreprise</div>
+        <div class="document-title">Bulletin de Paie</div>
+    </div>
+
+    <div class="info-section">
+        <table class="info-table">
+            <tbody>
+                <tr>
+                    <td class="info-label">Employé</td>
+                    <td th:text="${salarySlip.employeeName}">Nom employé</td>
+                    <td class="info-label">Référence</td>
+                    <td th:text="${salarySlip.name}">Référence</td>
+                </tr>
+                <tr>
+                    <td class="info-label">Période</td>
+                    <td><span th:text="${salarySlip.startDate}">Date début</span> - <span th:text="${salarySlip.endDate}">Date fin</span></td>
+                    <td class="info-label">Jours travaillés</td>
+                    <td th:text="${salarySlip.paymentDays + ' / ' + salarySlip.totalWorkingDays}">Jours</td>
+                </tr>
+                <tr>
+                    <td class="info-label">Structure salariale</td>
+                    <td th:text="${salarySlip.salaryStructure}">Structure</td>
+                    <td class="info-label">Mode de paiement</td>
+                    <td th:text="${salarySlip.modeOfPayment}">Mode</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="summary-box">
+        <table class="summary-table">
+            <tbody>
+                <tr>
+                    <td>Salaire brut</td>
+                    <td class="amount">
+                        <span th:text="${#numbers.formatDecimal(salarySlip.grossPay, 1, 2)}">0.00</span>
+                        <span th:text="${salarySlip.currency}">EUR</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Total déductions</td>
+                    <td class="amount">
+                        <span th:text="${#numbers.formatDecimal(salarySlip.totalDeduction, 1, 2)}">0.00</span>
+                        <span th:text="${salarySlip.currency}">EUR</span>
+                    </td>
+                </tr>
+                <tr class="total-row">
+                    <td>Net à payer</td>
+                    <td class="amount">
+                        <span th:text="${#numbers.formatDecimal(salarySlip.netPay, 1, 2)}">0.00</span>
+                        <span th:text="${salarySlip.currency}">EUR</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="components-section">
+        <div class="components-title">Gains</div>
+        <table class="components-table">
+            <tbody>
+                <tr th:each="earning : ${salarySlip.earnings}">
+                    <td>
+                        <div th:text="${earning.component}">Composant</div>
+                        <div class="component-formula" th:if="${earning.formula}" th:text="${earning.formula}">Formule</div>
+                    </td>
+                    <td class="amount">
+                        <span th:text="${#numbers.formatDecimal(earning.amount, 1, 2)}">0.00</span>
+                        <span th:text="${salarySlip.currency}">EUR</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="components-section">
+        <div class="components-title">Déductions</div>
+        <table class="components-table">
+            <tbody>
+                <tr th:each="deduction : ${salarySlip.deductions}">
+                    <td>
+                        <div th:text="${deduction.component}">Composant</div>
+                        <div class="component-formula" th:if="${deduction.formula}" th:text="${deduction.formula}">Formule</div>
+                    </td>
+                    <td class="amount">
+                        <span th:text="${#numbers.formatDecimal(deduction.amount, 1, 2)}">0.00</span>
+                        <span th:text="${salarySlip.currency}">EUR</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        <p>Ce document est généré automatiquement et ne nécessite pas de signature.</p>
+        <p>Généré le <span th:text="${#dates.format(#dates.createNow(), 'dd/MM/yyyy HH:mm')}">01/01/2024 00:00</span></p>
+    </div>
+</body>
+</html> 

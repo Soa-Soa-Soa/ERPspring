@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import de données - ERPNext Integration</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4">Import de données</h2>
+
+        <div class="row">
+            <!-- Import des employés -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Import des employés</h5>
+                        <form action="/import/employees" method="post" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="employeesFile" class="form-label">Fichier CSV des employés</label>
+                                <input type="file" class="form-control" id="employeesFile" name="file" accept=".csv" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-upload"></i> Importer
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Import des structures salariales -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Import des structures salariales</h5>
+                        <form action="/import/salary-structures" method="post" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="structuresFile" class="form-label">Fichier CSV des structures</label>
+                                <input type="file" class="form-control" id="structuresFile" name="file" accept=".csv" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-upload"></i> Importer
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Import des salaires -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Import des salaires</h5>
+                        <form action="/import/salaries" method="post" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="salariesFile" class="form-label">Fichier CSV des salaires</label>
+                                <input type="file" class="form-control" id="salariesFile" name="file" accept=".csv" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-upload"></i> Importer
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages de résultat -->
+        <div class="mt-4">
+            <div th:if="${successMessage}" class="alert alert-success" role="alert">
+                <i class="fas fa-check-circle"></i>
+                <span th:text="${successMessage}"></span>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-circle"></i>
+                <span th:text="${errorMessage}"></span>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
