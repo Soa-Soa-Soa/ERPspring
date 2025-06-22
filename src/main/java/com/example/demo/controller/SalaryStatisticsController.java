@@ -32,7 +32,7 @@ public class SalaryStatisticsController {
         
         // Générer la liste des années disponibles (5 ans en arrière jusqu'à l'année en cours)
         int currentYear = Year.now().getValue();
-        List<Integer> availableYears = IntStream.rangeClosed(currentYear - 4, currentYear)
+        List<Integer> availableYears = IntStream.rangeClosed(currentYear - 4, currentYear + 1)
                 .boxed().sorted((a, b) -> b.compareTo(a)).toList();
 
         model.addAttribute("statistics", statistics);

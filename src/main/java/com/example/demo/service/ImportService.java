@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.DateTimeException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ImportService {
@@ -50,7 +51,7 @@ public class ImportService {
             int year = Integer.parseInt(parts[2]);
 
             // Vérifier l'année (entre 1900 et 2100)
-            if (year < 1900 || year > 2100) {
+            if (year < 1700 || year > 2100) {
                 throw new RuntimeException("Année invalide pour " + fieldName + ": " + year + ". L'année doit être entre 1900 et 2100");
             }
 
@@ -280,20 +281,109 @@ public class ImportService {
         }
     }
 
-    private String createEmployee(EmployeeImportDTO employee, String sid) {
-        String url = baseUrl + "/api/resource/Employee";
+    private String getCompanyName(String sid){
+        String url = baseUrl + "/api/resource/Company?limit=1";        
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+        
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                JsonNode.class
+            );
+            return response.getBody().get("data").get(0).get("name").asText();
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de la récupération du nom de la société: " + e.getMessage(), e);
+        }
+    }
+
+    private List<String> getAllCompanyNames(String sid) {
+        String url = baseUrl + "/api/resource/Company?fields=[\"name\"]&limit=None";        
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+        
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                JsonNode.class
+            );
+            List<String> companies = new ArrayList<>();
+            response.getBody().get("data").forEach(company -> 
+                companies.add(company.get("name").asText())
+            );
+            return companies;
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de la récupération des sociétés: " + e.getMessage(), e);
+        }
+    }
+
+    private void createNewCompany(String companyName, String sid) {
+        String url = baseUrl + "/api/resource/Company";
         
         HttpHeaders headers = new HttpHeaders();
         headers.set("Cookie", "sid=" + sid);
         headers.setContentType(MediaType.APPLICATION_JSON);
-        
+
+        // Créer une abréviation à partir des premières lettres de chaque mot
+        String abbr = Arrays.stream(companyName.split(" "))
+            .filter(word -> !word.isEmpty())
+            .map(word -> word.substring(0, 1).toUpperCase())
+            .collect(Collectors.joining());
+
+        ObjectNode companyNode = objectMapper.createObjectNode()
+            .put("doctype", "Company")
+            .put("company_name", companyName)
+            .put("abbr", abbr)
+            .put("default_currency", "USD")
+            .put("country", "Madagascar")
+            .put("default_holiday_list", "Holiday Test");
+
+        HttpEntity<String> request = new HttpEntity<>(companyNode.toString(), headers);
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.exchange(url, HttpMethod.POST, request, JsonNode.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de la création de l'entreprise " + companyName + ": " + e.getMessage(), e);
+        }
+    }
+
+    private String createEmployee(EmployeeImportDTO employee, String sid) {           
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Vérifier si l'entreprise existe parmi toutes les entreprises
+        try {
+            List<String> companies = getAllCompanyNames(sid);
+            if (!companies.contains(employee.getCompany())) {
+                createNewCompany(employee.getCompany(), sid);
+            }
+        } catch (Exception e) {
+            // Si erreur lors de la récupération des entreprises, on tente d'en créer une nouvelle
+            createNewCompany(employee.getCompany(), sid);
+        }
+
+        String url = baseUrl + "/api/resource/Employee";
+
         // Convertir les dates au format ERPNext
         LocalDate dateNaissance = LocalDate.parse(employee.getDateNaissance(), CSV_DATE_FORMATTER);
         LocalDate dateEmbauche = LocalDate.parse(employee.getDateEmbauche(), CSV_DATE_FORMATTER);
         LocalDate dateRetraite = dateNaissance.plusYears(60);
-        
+
         ObjectNode employeeNode = objectMapper.createObjectNode()
             .put("doctype", "Employee")
+            .put("company", employee.getCompany())
             .put("first_name", employee.getPrenom())
             .put("last_name", employee.getNom())
             .put("employee_name", employee.getPrenom() + " " + employee.getNom())
@@ -301,7 +391,6 @@ public class ImportService {
             .put("date_of_birth", dateNaissance.format(ERPNEXT_DATE_FORMATTER))
             .put("date_of_joining", dateEmbauche.format(ERPNEXT_DATE_FORMATTER))
             .put("status", "Active")
-            .put("company", employee.getCompany())
             .put("create_user_permission", 1)
             .put("date_of_retirement", dateRetraite.format(ERPNEXT_DATE_FORMATTER))
             .put("salary_currency", "USD")
@@ -361,11 +450,16 @@ public class ImportService {
         headers.set("Cookie", "sid=" + sid);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
+        String abbr = Arrays.stream(component.getCompany().split(" "))
+        .filter(word -> !word.isEmpty())
+        .map(word -> word.substring(0, 1).toUpperCase())
+        .collect(Collectors.joining());
+
         // Créer le tableau des comptes
         ArrayNode accountsArray = objectMapper.createArrayNode();
         ObjectNode accountNode = objectMapper.createObjectNode()
             .put("company", component.getCompany())
-            .put("account", "Cash - SC")
+            .put("account", "Cash - " + abbr)
             .put("doctype", "Salary Component Account");
         accountsArray.add(accountNode);
         

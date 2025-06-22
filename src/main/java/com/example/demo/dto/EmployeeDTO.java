@@ -7,6 +7,9 @@ import lombok.Data;
 public class EmployeeDTO {
     @JsonProperty("name")
     private String name;
+
+    @JsonProperty("gender")
+    private String genre;
     
     @JsonProperty("employee_name")
     private String employeeName;

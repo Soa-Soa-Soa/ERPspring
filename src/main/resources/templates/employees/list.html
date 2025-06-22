@@ -103,6 +103,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th class="ps-4">Nom</th>
+                                <th>Genre</th>
                                 <th>Département</th>
                                 <th>Poste</th>
                                 <th>Date d'embauche</th>
@@ -117,6 +118,7 @@
                                     <div class="fw-medium" th:text="${employee.employeeName}"></div>
                                     <small class="text-muted" th:text="${employee.name}"></small>
                                 </td>
+                                <td th:text="${employee.genre}"></td>
                                 <td th:text="${employee.department}"></td>
                                 <td th:text="${employee.designation}"></td>
                                 <td th:text="${employee.dateOfJoining}"></td>

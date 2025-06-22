@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.SalarySlipDTO;
+import com.example.demo.dto.GenerateSalaryDTO;
 import com.example.demo.service.SalaryService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -9,9 +10,12 @@ import org.springframework.web.util.UriUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.io.IOException;
+import jakarta.validation.Valid;
+import org.springframework.validation.BindingResult;
 
 import org.xhtmlrenderer.pdf.ITextRenderer;
 import java.time.YearMonth;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,16 +24,23 @@ import java.time.Month;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.context.Context;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import com.example.demo.service.EmployeeService;
+import java.util.Map;
+import com.example.demo.dto.EmployeeDTO;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/employees")
 public class SalaryController {
     
     private final SalaryService salaryService;
+    private final EmployeeService employeeService;
     private final SpringTemplateEngine templateEngine;
 
-    public SalaryController(SalaryService salaryService, SpringTemplateEngine templateEngine) {
+    public SalaryController(SalaryService salaryService, EmployeeService employeeService, SpringTemplateEngine templateEngine) {
         this.salaryService = salaryService;
+        this.employeeService = employeeService;
         this.templateEngine = templateEngine;
     }
 
@@ -160,7 +171,7 @@ public class SalaryController {
         // Générer la liste des années (de l'année courante - 5 à l'année courante)
         List<Integer> availableYears = new ArrayList<>();
         int currentYear = YearMonth.now().getYear();
-        for (int i = 0; i <= 5; i++) {
+        for (int i = 0; i <= 6; i++) {
             availableYears.add(currentYear - i);
         }
         
@@ -178,5 +189,65 @@ public class SalaryController {
         model.addAttribute("totalNetPay", totalNetPay);
         
         return "employees/salary-summary";
+    }
+
+    @GetMapping("/generate-salary")
+    public String showGenerateSalaryForm(
+            @CookieValue(name = "sid", required = true) String sid,
+            Model model) {
+        try {
+            List<EmployeeDTO> employees = employeeService.getEmployees(sid);
+            model.addAttribute("employees", employees);
+            if (!model.containsAttribute("generateSalaryDTO")) {
+                model.addAttribute("generateSalaryDTO", new GenerateSalaryDTO());
+            }
+            return "employees/generate-salary";
+        } catch (Exception e) {
+            model.addAttribute("error", "Erreur lors du chargement de la liste des employés: " + e.getMessage());
+            return "error";
+        }
+    }
+
+    @PostMapping("/generate-salary-slips")
+    public String generateSalarySlips(
+            @CookieValue(name = "sid", required = true) String sid,
+            @Valid @ModelAttribute("generateSalaryDTO") GenerateSalaryDTO request,
+            BindingResult bindingResult,
+            RedirectAttributes redirectAttributes,
+            Model model) {
+        
+        // Vérifier les erreurs de validation
+        if (bindingResult.hasErrors()) {
+            List<EmployeeDTO> employees = employeeService.getEmployees(sid);
+            model.addAttribute("employees", employees);
+            model.addAttribute("error", "Veuillez corriger les erreurs dans le formulaire");
+            return "employees/generate-salary";
+        }
+        
+        // Vérifier que la date de fin est après la date de début
+        if (!request.isDateRangeValid()) {
+            List<EmployeeDTO> employees = employeeService.getEmployees(sid);
+            model.addAttribute("employees", employees);
+            model.addAttribute("error", "La date de fin doit être après la date de début");
+            return "employees/generate-salary";
+        }
+
+        try {
+            salaryService.generateMonthlySalarySlips(
+                sid,
+                request.getEmployee(),
+                request.getDebut(),
+                request.getFin(),
+                request.getSalaire()
+            );
+            redirectAttributes.addFlashAttribute("success", 
+                "Les fiches de paie ont été générées avec succès pour la période du " + 
+                request.getDebut() + " au " + request.getFin());
+            return "redirect:/employees/" + request.getEmployee() + "/salary";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Erreur lors de la génération des fiches de paie: " + e.getMessage());
+            return "redirect:/employees/generate-salary";
+        }
     }
 } 

@@ -29,7 +29,7 @@ public class EmployeeService {
     public List<EmployeeDTO> getEmployees(String sid) {
         String url = baseUrl + "/api/resource/Employee?fields=[\"*\"]" +
                     "&order_by=\"employee_name asc\"" +
-                    "&limit=100";
+                    "&limit=0";
         
         HttpHeaders headers = new HttpHeaders();
         headers.set("Cookie", "sid=" + sid);
@@ -52,6 +52,7 @@ public class EmployeeService {
                 for (JsonNode employee : data) {
                     EmployeeDTO dto = new EmployeeDTO();
                     dto.setName(getTextValue(employee, "name"));
+                    dto.setGenre(getTextValue(employee, "gender"));
                     dto.setEmployeeName(getTextValue(employee, "employee_name"));
                     dto.setDepartment(getTextValue(employee, "department"));
                     dto.setDesignation(getTextValue(employee, "designation"));
