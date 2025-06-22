@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générer les Fiches de Paie - ERPNext Integration</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <div class="container py-4">
+        <!-- En-tête -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">
+                    <i class="fas fa-plus-circle me-2 text-primary"></i>
+                    Générer les Fiches de Paie
+                </h2>
+            </div>
+            <a href="/employees" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Retour
+            </a>
+        </div>
+
+        <!-- Messages d'alerte -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Formulaire -->
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/employees/generate-salary-slips}" method="post" class="needs-validation" novalidate>
+                    <div class="mb-3">
+                        <label for="employee" class="form-label">Employé</label>
+                        <select class="form-select" id="employee" name="employee" required>
+                            <option value="">Sélectionner un employé</option>
+                            <option th:each="emp : ${employees}" 
+                                    th:value="${emp.name}" 
+                                    th:text="${emp.employeeName}">
+                            </option>
+                        </select>
+                        <div class="invalid-feedback">
+                            Veuillez sélectionner un employé
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="debut" class="form-label">Date de début</label>
+                        <input type="date" class="form-control" id="debut" name="debut" required>
+                        <div class="invalid-feedback">
+                            Veuillez sélectionner une date de début
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="fin" class="form-label">Date de fin</label>
+                        <input type="date" class="form-control" id="fin" name="fin" required>
+                        <div class="invalid-feedback">
+                            Veuillez sélectionner une date de fin
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="salaire" class="form-label">Salaire de base (optionnel)</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="salaire" name="salaire" step="0.01">
+                            <span class="input-group-text">USD</span>
+                        </div>
+                        <div class="form-text text-muted">
+                            Laissez vide pour utiliser le dernier salaire de base connu
+                        </div>
+                        <div class="invalid-feedback">
+                            Le salaire doit être positif s'il est spécifié
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-money-check me-2"></i>Générer les fiches de paie
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Form validation
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+    </script>
+</body>
+</html> 

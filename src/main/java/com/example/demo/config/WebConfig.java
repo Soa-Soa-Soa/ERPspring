@@ -6,6 +6,8 @@ import org.springframework.web.servlet.config.annotation.ContentNegotiationConfi
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.format.FormatterRegistry;
+import org.springframework.format.datetime.DateFormatter;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -27,5 +29,11 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController("/error").setViewName("error");
+    }
+
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        DateFormatter dateFormatter = new DateFormatter("yyyy-MM-dd");
+        registry.addFormatter(dateFormatter);
     }
 } 
