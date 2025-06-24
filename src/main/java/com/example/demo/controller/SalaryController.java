@@ -12,6 +12,8 @@ import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import jakarta.validation.Valid;
 import org.springframework.validation.BindingResult;
+import org.springframework.http.*;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import org.xhtmlrenderer.pdf.ITextRenderer;
 import java.time.YearMonth;
@@ -29,6 +31,7 @@ import com.example.demo.service.EmployeeService;
 import java.util.Map;
 import com.example.demo.dto.EmployeeDTO;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.example.demo.dto.SalaryStructureAssignmentDTO;
 
 @Controller
 @RequestMapping("/employees")
@@ -249,5 +252,97 @@ public class SalaryController {
                 "Erreur lors de la génération des fiches de paie: " + e.getMessage());
             return "redirect:/employees/generate-salary";
         }
+    }
+
+    @PostMapping("/{employeeId}/salary-slip/cancel")
+    public String cancelSalarySlip(@PathVariable String employeeId, @RequestParam String slipId,
+                                   @CookieValue(name = "sid") String sid, RedirectAttributes redirectAttributes) {
+        try {
+            salaryService.cancelSalarySlip(slipId, sid);
+            redirectAttributes.addFlashAttribute("successMessage", "Salary Slip " + slipId + " has been cancelled.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error cancelling Salary Slip: " + e.getMessage());
+        }
+        // Redirect back to the details page to see the updated status
+        return "redirect:/employees/" + employeeId + "/salary/details?slipId=" + slipId;
+    }
+
+    @PostMapping("/{employeeId}/salary-slip/delete")
+    public String deleteSalarySlip(@PathVariable String employeeId, @RequestParam String slipId,
+                                   @CookieValue(name = "sid") String sid, RedirectAttributes redirectAttributes) {
+        try {
+            salaryService.deleteSalarySlip(slipId, sid);
+            redirectAttributes.addFlashAttribute("successMessage", "Salary Slip " + slipId + " has been deleted.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error deleting Salary Slip: " + e.getMessage());
+        }
+        
+        return "redirect:/employees/" + employeeId + "/salary";
+    }
+
+    @GetMapping("/ssa/new")
+    public String showSalaryStructureAssignmentForm(@CookieValue(name = "sid", required = true) String sid, @RequestParam(name = "ssaId", required = false) String ssaId, Model model) {
+        SalaryStructureAssignmentDTO assignment = new SalaryStructureAssignmentDTO();
+
+        if (ssaId != null){
+            assignment = salaryService.getSSA(ssaId, sid);
+            assignment.setAmendedFrom(ssaId);
+        }
+
+        System.out.println("DEBUG SSA: ssaId=" + ssaId + ", assignment.employee=" + assignment.getEmployee());
+
+        model.addAttribute("assignment", assignment);
+        model.addAttribute("employees", employeeService.getEmployees(sid));
+        model.addAttribute("salaryStructures", salaryService.getSalaryStructures(sid));
+        model.addAttribute("companies", employeeService.getCompanies(sid));
+
+        return "employees/salary-structure-assignment-create";
+    }
+
+    @PostMapping("/ssa/new")
+    public String createSalaryStructureAssignment(@ModelAttribute SalaryStructureAssignmentDTO assignment,
+                                                  @RequestParam(value = "docstatus", required = false) Integer docstatus,
+                                                  @CookieValue(name = "sid", required = true) String sid,
+                                                  RedirectAttributes redirectAttributes) {
+        try {
+            
+            JsonNode employeeInfo = salaryService.getEmployeeInfo(assignment.getEmployee(), sid);
+            String company = employeeInfo.get("data").get("company").asText();
+            assignment.setCompany(company);
+
+            if (docstatus != null) {
+                assignment.setDocstatus(docstatus);
+            }
+            else {
+                assignment.setDocstatus(0);
+            }
+
+            salaryService.createSalaryStructureAssignment(assignment, sid);
+            redirectAttributes.addFlashAttribute("successMessage", "Salary Structure Assignment created successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to create Salary Structure Assignment: " + e.getMessage());
+        }
+        return "redirect:/employees/ssa";
+    }
+
+    @GetMapping("/ssa")
+    public String listSalaryStructureAssignments(@CookieValue(name = "sid", required = true) String sid, Model model) {
+        model.addAttribute("ssaList", salaryService.getSalaryStructureAssignments(sid));
+        return "employees/salary-structure-assignment-list";
+    }
+
+    @PostMapping("/ssa/{ssaId}/update/{docstatus}")
+    public String updateSSA(@CookieValue(name = "sid", required = true) String sid,
+                            @PathVariable(name = "docstatus", required = true) Integer docstatus,
+                            @PathVariable(name = "ssaId", required = true) String ssaId,
+                            RedirectAttributes redirectAttributes){
+    
+        try{
+            salaryService.updateSSAStatus(ssaId, sid, docstatus);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to update Salary Structure Assignment: " + e.getMessage());
+        }
+
+        return "redirect:/employees/ssa";
     }
 } 

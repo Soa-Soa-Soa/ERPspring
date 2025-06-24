@@ -57,4 +57,7 @@ public class SalarySlipDTO {
     
     @JsonProperty("deductions")
     private List<SalaryDetailDTO> deductions;
+
+    @JsonProperty("docstatus")
+    private Integer docstatus;
 } 

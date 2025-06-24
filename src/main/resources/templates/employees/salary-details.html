@@ -47,6 +47,16 @@
     <div th:replace="~{fragments/navbar :: navbar}"></div>
 
     <div class="container py-4">
+        <!-- Success/Error Messages -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
         <!-- En-tête -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
@@ -64,6 +74,20 @@
                    class="btn btn-primary">
                     <i class="fas fa-file-pdf me-2"></i>Télécharger PDF
                 </a>
+
+                <!-- Cancel Button: Show only if submitted (docstatus 1) -->
+                <form th:if="${salarySlip.docstatus == 1}" th:action="@{/employees/{employeeId}/salary-slip/cancel?slipId={slipId}(employeeId=${employeeId}, slipId=${salarySlip.name})}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to cancel this salary slip?');">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-times me-2"></i>
+                    </button>
+                </form>
+
+                <!-- Delete Button: Show if draft (0) or cancelled (2) -->
+                <form th:if="${salarySlip.docstatus == 0 || salarySlip.docstatus == 2}" th:action="@{/employees/{employeeId}/salary-slip/delete?slipId={slipId}(employeeId=${employeeId}, slipId=${salarySlip.name})}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to permanently delete this salary slip?');">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt me-2"></i>
+                    </button>
+                </form>
             </div>
         </div>
 

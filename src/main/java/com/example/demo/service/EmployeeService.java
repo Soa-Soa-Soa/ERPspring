@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.EmployeeDTO;
+import com.example.demo.dto.EmployeeCreationDTO;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -113,6 +114,74 @@ public class EmployeeService {
         }
     }
 
+    public List<String> getDesignations(String sid) {
+        String url = baseUrl + "/api/resource/Designation?fields=[\"name\"]";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    JsonNode.class
+            );
+
+            Set<String> designationSet = new TreeSet<>();
+            if (response.getBody() != null && response.getBody().has("data")) {
+                JsonNode data = response.getBody().get("data");
+                for (JsonNode des : data) {
+                    String desName = getTextValue(des, "name");
+                    if (desName != null && !desName.isEmpty()) {
+                        designationSet.add(desName);
+                    }
+                }
+            }
+            return new ArrayList<>(designationSet);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to fetch designations: " + e.getMessage());
+        }
+    }
+
+    public List<String> getCompanies(String sid) {
+        String url = baseUrl + "/api/resource/Company?fields=[\"name\"]";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                JsonNode.class
+            );
+
+            Set<String> companySet = new TreeSet<>();
+            if (response.getBody() != null && response.getBody().has("data")) {
+                JsonNode data = response.getBody().get("data");
+                for (JsonNode company : data) {
+                    String companyName = getTextValue(company, "name");
+                    if (companyName != null && !companyName.isEmpty()) {    
+                        companySet.add(companyName);
+                    }
+                }
+            }
+            return new ArrayList<>(companySet);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to fetch companies: " + e.getMessage());
+        }
+    }
+
     public void updateStatus(String employeeId, String sid, String status) {
         String url = baseUrl + "/api/resource/Employee/" + employeeId;
 
@@ -137,6 +206,56 @@ public class EmployeeService {
             restTemplate.exchange(url, HttpMethod.PUT, request, JsonNode.class);
         } catch (Exception e) {
             throw new RuntimeException("Erreur lors de la désactivation de l'employé " + employeeId + ": " + e.getMessage(), e);
+        }
+    }
+
+    // Creation employee
+
+    public void createEmployee(EmployeeCreationDTO employeeDTO, String sid) {
+        String url = baseUrl + "/api/resource/Employee";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        ObjectNode employeeNode = objectMapper.createObjectNode();
+        employeeNode.put("doctype", "Employee");
+        employeeNode.put("naming_series", "HR-EMP-");
+        employeeNode.put("first_name", employeeDTO.getFirstName());
+        employeeNode.put("last_name", employeeDTO.getLastName());
+        employeeNode.put("company", employeeDTO.getCompany());
+        employeeNode.put("gender", employeeDTO.getGender());
+        employeeNode.put("date_of_joining", employeeDTO.getDateOfJoining());
+        employeeNode.put("date_of_birth", employeeDTO.getDateOfBirth());
+        employeeNode.put("personal_email", employeeDTO.getPersonalEmail());
+        employeeNode.put("department", employeeDTO.getDepartment());
+        employeeNode.put("designation", employeeDTO.getDesignation());
+        employeeNode.put("status", "Active");
+
+
+        HttpEntity<String> request = new HttpEntity<>(employeeNode.toString(), headers);
+
+        try {
+            restTemplate.exchange(url, HttpMethod.POST, request, JsonNode.class);
+        } catch (Exception e) {
+            // It's better to log the actual error response from ERPNext if possible
+            throw new RuntimeException("Failed to create employee: " + e.getMessage(), e);
+        }
+    }
+
+    public void deleteEmployee(String employeeId, String sid) {
+        String url = baseUrl + "/api/resource/Employee/" + employeeId;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<String> request = new HttpEntity<>(headers);
+
+        try {
+            restTemplate.exchange(url, HttpMethod.DELETE, request, JsonNode.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete employee: " + e.getMessage(), e);
         }
     }
 

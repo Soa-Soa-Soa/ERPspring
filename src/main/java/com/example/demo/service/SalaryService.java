@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.dto.SalaryDetailDTO;
 import com.example.demo.dto.SalarySlipDTO;
 import com.example.demo.dto.SalaryModificationCriteriaDTO;
+import com.example.demo.dto.SalaryStructureAssignmentDTO;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.stream.Collectors;
+import java.util.*;
 
 @Service
 public class SalaryService {
@@ -83,6 +86,7 @@ public class SalaryService {
                     dto.setCurrency(getTextValue(slip, "currency"));
                     dto.setSalaryStructure(getTextValue(slip, "salary_structure"));
                     dto.setModeOfPayment(getTextValue(slip, "mode_of_payment"));
+                    dto.setDocstatus(getIntValue(slip, "docstatus"));
                     
                     // Récupérer les détails des composants du salaire
                     dto.setEarnings(getSalaryDetails(slip, "earnings"));
@@ -135,6 +139,7 @@ public class SalaryService {
                 dto.setCurrency(getTextValue(slip, "currency"));
                 dto.setSalaryStructure(getTextValue(slip, "salary_structure"));
                 dto.setModeOfPayment(getTextValue(slip, "mode_of_payment"));
+                dto.setDocstatus(getIntValue(slip, "docstatus"));
                 
                 // Récupérer les détails des composants du salaire
                 dto.setEarnings(getSalaryDetails(slip, "earnings"));
@@ -209,6 +214,7 @@ public class SalaryService {
                     dto.setCurrency(getTextValue(slip, "currency"));
                     dto.setSalaryStructure(getTextValue(slip, "salary_structure"));
                     dto.setModeOfPayment(getTextValue(slip, "mode_of_payment"));
+                    dto.setDocstatus(getIntValue(slip, "docstatus"));
                     
                     // Fetch detailed salary slip information including components
                     SalarySlipDTO detailedSlip = getSalarySlipDetails(sid, dto.getName());
@@ -274,7 +280,7 @@ public class SalaryService {
     }
 
     private Integer getIntValue(JsonNode node, String fieldName) {
-        return node.has(fieldName) ? node.get(fieldName).asInt() : null;
+        return node.has(fieldName) && !node.get(fieldName).isNull() ? node.get(fieldName).asInt() : 0;
     }
 
     private Boolean getBooleanValue(JsonNode node, String fieldName) {
@@ -519,7 +525,7 @@ public class SalaryService {
         }
     }
 
-    private JsonNode getEmployeeInfo(String employeeId, String sid) {
+    public JsonNode getEmployeeInfo(String employeeId, String sid) {
         String url = baseUrl + "/api/resource/Employee/" + employeeId;
         
         HttpHeaders headers = new HttpHeaders();
@@ -856,6 +862,225 @@ public class SalaryService {
             logger.info("API Response for {}: {}", endpoint, response.toPrettyString());
         } catch (Exception e) {
             logger.error("Error logging API response", e);
+        }
+    }
+
+    public void cancelSalarySlip(String slipId, String sid) {
+        String url = baseUrl + "/api/resource/Salary Slip/" + slipId;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        ObjectNode node = objectMapper.createObjectNode().put("docstatus", 2);
+
+        HttpEntity<String> request = new HttpEntity<>(node.toString(), headers);
+        try {
+            restTemplate.exchange(url, HttpMethod.PUT, request, JsonNode.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to cancel Salary Slip " + slipId + ": " + e.getMessage(), e);
+        }
+    }
+
+    public void deleteSalarySlip(String slipId, String sid) {
+        String url = baseUrl + "/api/resource/Salary Slip/" + slipId;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+
+        HttpEntity<String> request = new HttpEntity<>(headers);
+        try {
+            restTemplate.exchange(url, HttpMethod.DELETE, request, JsonNode.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete Salary Slip " + slipId + ": " + e.getMessage(), e);
+        }
+    }
+
+    public void createSalaryStructureAssignment(SalaryStructureAssignmentDTO dto, String sid) {
+        String url = baseUrl + "/api/resource/Salary Structure Assignment";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        ObjectNode node = objectMapper.createObjectNode();
+        node.put("doctype", "Salary Structure Assignment");
+        node.put("employee", dto.getEmployee());
+        node.put("salary_structure", dto.getSalaryStructure());
+        node.put("from_date", dto.getFromDate());
+        if (dto.getBase() != null) node.put("base", dto.getBase());
+        if (dto.getAmendedFrom() != null) node.put("amended_from", dto.getAmendedFrom());
+        node.put("company", dto.getCompany());
+        node.put("docstatus", dto.getDocstatus());
+
+        HttpEntity<String> request = new HttpEntity<>(node.toString(), headers);
+        try {
+            restTemplate.exchange(url, HttpMethod.POST, request, JsonNode.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create Salary Structure Assignment: " + e.getMessage(), e);
+        }
+    }
+
+    public List<String> getSalaryStructures(String sid) {
+        String url = baseUrl + "/api/resource/Salary Structure?fields=[\"name\"]";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                JsonNode.class
+            );
+
+            Set<String> structureSet = new TreeSet<>();
+            if (response.getBody() != null && response.getBody().has("data")) {
+                JsonNode data = response.getBody().get("data");
+                for (JsonNode structure : data) {
+                    String structureName = getTextValue(structure, "name");
+                    if (structureName != null && !structureName.isEmpty()) {    
+                        structureSet.add(structureName);
+                    }
+                }
+            }
+            return new ArrayList<>(structureSet);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to fetch companies: " + e.getMessage());
+        }
+    }
+
+    public List<SalaryStructureAssignmentDTO> getSalaryStructureAssignments(String sid) {
+        String url = baseUrl + "/api/resource/Salary Structure Assignment?fields=[\"*\"]&order_by=from_date desc";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                JsonNode.class
+            );
+            List<SalaryStructureAssignmentDTO> result = new ArrayList<>();
+            if (response.getBody() != null && response.getBody().has("data")) {
+                JsonNode data = response.getBody().get("data");
+                for (JsonNode node : data) {
+                    SalaryStructureAssignmentDTO dto = new SalaryStructureAssignmentDTO();
+                    dto.setName(node.get("name").asText());
+                    dto.setEmployee(node.get("employee").asText());
+                    dto.setEmployeeName(node.get("employee_name").asText());
+                    dto.setSalaryStructure(node.get("salary_structure").asText());
+                    dto.setFromDate(node.get("from_date").asText());
+                    dto.setBase(node.has("base") && !node.get("base").isNull() ? node.get("base").asDouble() : null);
+                    dto.setCompany(node.get("company").asText());
+                    dto.setDocstatus(node.get("docstatus").asInt());
+
+                    if(isAmended(dto.getName(), sid)){
+                        dto.setIsAmended(true);
+                    }
+                    else {
+                        dto.setIsAmended(false);
+                    }
+
+                    result.add(dto);
+                }
+            }
+            return result;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to fetch Salary Structure Assignments: " + e.getMessage(), e);
+        }
+    }
+
+    public boolean isAmended(String ssaId, String sid) {
+        String url = baseUrl + "/api/resource/Salary Structure Assignment?fields=[\"name\"]&filters=[[\"amended_from\",\"=\",\"" + ssaId + "\"]]";
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                JsonNode.class
+            );
+            if (response.getBody() != null && response.getBody().has("data")) {
+                JsonNode data = response.getBody().get("data");
+                return data.size() > 0;
+            }
+            return false;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to check amendment: " + e.getMessage(), e);
+        }
+    }
+
+    public SalaryStructureAssignmentDTO getSSA(String ssaId, String sid) {
+        String url = baseUrl + "/api/resource/Salary Structure Assignment/" + ssaId + "?fields=[\"*\"]";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                JsonNode.class
+            );
+            logger.info("Réponse SSA = " + response.getBody());
+
+            SalaryStructureAssignmentDTO dto = new SalaryStructureAssignmentDTO();
+            if (response.getBody() != null && response.getBody().has("data")) {
+                JsonNode data = response.getBody().get("data");
+                    dto.setName(data.get("name").asText());
+                    dto.setEmployee(data.get("employee").asText());
+                    dto.setEmployeeName(data.get("employee_name").asText());
+                    dto.setSalaryStructure(data.get("salary_structure").asText());
+                    dto.setFromDate(data.get("from_date").asText());
+                    dto.setBase(data.has("base") && !data.get("base").isNull() ? data.get("base").asDouble() : null);
+                    dto.setCompany(data.get("company").asText());
+                    dto.setDocstatus(data.get("docstatus").asInt());
+            }
+            return dto;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to fetch Salary Structure Assignments: " + e.getMessage(), e);
+        }
+    }
+
+    public void updateSSAStatus(String ssaId, String sid, Integer docstatus) {
+        String url = baseUrl + "/api/resource/Salary Structure Assignment/" + ssaId;
+        Integer newValue = 0;
+
+        if (docstatus == 0) {
+            newValue = 1;
+        } else if (docstatus == 1) {
+            newValue = 2;
+        }
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        ObjectNode ssaNode = objectMapper.createObjectNode().put("docstatus", newValue);
+
+        HttpEntity<String> request = new HttpEntity<>(ssaNode.toString(), headers);
+
+        try {
+            
+            restTemplate.exchange(url, HttpMethod.PUT, request, JsonNode.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de la modification de la structure " + ssaId + ": " + e.getMessage(), e);
         }
     }
 } 

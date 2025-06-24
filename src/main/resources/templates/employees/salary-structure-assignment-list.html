@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des Affectations de Structure Salariale</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-user-check me-2 text-primary"></i>Liste des Affectations de Structure Salariale</h2>
+        <a href="/employees/ssa/new" class="btn btn-success">
+            <i class="fas fa-plus me-2"></i>Créer un nouveau
+        </a>
+    </div>
+
+    <div th:if="${ssaList.isEmpty()}">
+        <div class="alert alert-info">Aucune affectation trouvée.</div>
+    </div>
+    <div th:if="${!ssaList.isEmpty()}">
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+                <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Employé</th>
+                    <th>Structure salariale</th>
+                    <th>Date début</th>
+                    <th>Salaire de base</th>
+                    <th>Société</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="ssa : ${ssaList}">
+                    <td th:text="${ssa.name}"></td>
+                    <td th:text="${ssa.employeeName}"></td>
+                    <td th:text="${ssa.salaryStructure}"></td>
+                    <td th:text="${ssa.fromDate}"></td>
+                    <td th:text="${ssa.base}"></td>
+                    <td th:text="${ssa.company}"></td>
+                    <td>
+                        <form th:action="@{/employees/ssa/{ssaId}/update/{docstatus}(ssaId = ${ssa.name}, docstatus = ${ssa.docstatus})}" method="post">
+                            <span th:if="${ssa.docstatus == 1}" class="badge bg-success" onclick="this.closest('form').submit()">Submitted</span>
+                            <span th:if="${ssa.docstatus == 0}" class="badge bg-secondary" onclick="this.closest('form').submit()">Draft</span>
+                        </form>
+                        
+                        <form th:action="@{/employees/ssa/new}" method="get" th:if="${!ssa.isAmended}">
+                            <input type="hidden" th:value="${ssa.name}" name="ssaId">
+                            <span th:if="${ssa.docstatus == 2}" class="badge bg-danger">Cancelled</span>
+                            <span th:if="${ssa.docstatus == 2}" class="badge bg-danger" onclick="this.closest('form').submit()"><i class="fas fa-undo-alt"></i></span>
+                        </form>
+
+                        <span th:if="${ssa.isAmended == true}" class="badge bg-info">Amended</span>
+
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

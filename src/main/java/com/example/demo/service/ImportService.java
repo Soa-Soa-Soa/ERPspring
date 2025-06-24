@@ -304,7 +304,7 @@ public class ImportService {
     }
 
     private List<String> getAllCompanyNames(String sid) {
-        String url = baseUrl + "/api/resource/Company?fields=[\"name\"]&limit=None";        
+        String url = baseUrl + "/api/resource/Company?fields=[\"name\"]&limit=0";        
         
         HttpHeaders headers = new HttpHeaders();
         headers.set("Cookie", "sid=" + sid);
@@ -352,9 +352,14 @@ public class ImportService {
 
         HttpEntity<String> request = new HttpEntity<>(companyNode.toString(), headers);
         try {
-            ResponseEntity<JsonNode> response = restTemplate.exchange(url, HttpMethod.POST, request, JsonNode.class);
+            restTemplate.exchange(url, HttpMethod.POST, request, JsonNode.class);
         } catch (Exception e) {
-            throw new RuntimeException("Erreur lors de la création de l'entreprise " + companyName + ": " + e.getMessage(), e);
+            // Si l'entreprise existe déjà, on ignore l'erreur
+            if (e.getMessage() != null && e.getMessage().contains("already exists")) {
+                 System.out.println("L'entreprise " + companyName + " existe déjà, l'import continue.");
+            } else {
+                throw new RuntimeException("Erreur lors de la création de l'entreprise " + companyName + ": " + e.getMessage(), e);
+            }
         }
     }
 
@@ -370,7 +375,9 @@ public class ImportService {
                 createNewCompany(employee.getCompany(), sid);
             }
         } catch (Exception e) {
-            // Si erreur lors de la récupération des entreprises, on tente d'en créer une nouvelle
+            // Si la récupération de la liste échoue, on tente quand même de créer la société.
+            // La méthode createNewCompany gère le cas où elle existe déjà.
+            System.out.println("Impossible de lister les sociétés, tentative de création de " + employee.getCompany() + ". Erreur: " + e.getMessage());
             createNewCompany(employee.getCompany(), sid);
         }
 
@@ -900,5 +907,21 @@ public class ImportService {
             deleteSalarySlip(salarySlipId, sid);
         }
         createdSalarySlipIds.clear();
+    }
+
+    public String resetErpnextData(String sid) {
+        String url = baseUrl + "/api/method/erpnext.setup.reset_data.reset_all_data";
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cookie", "sid=" + sid);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+    
+        HttpEntity<String> request = new HttpEntity<>("{}", headers);
+    
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
+            return response.getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors du reset des données ERPNext: " + e.getMessage(), e);
+        }
     }
 } 

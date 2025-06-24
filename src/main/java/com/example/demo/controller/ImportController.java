@@ -42,6 +42,18 @@ public class ImportController {
         }
     }
 
+    @PostMapping("/erpnext/reset")
+    public String resetErpnextData(@CookieValue("sid") String sid, Model model) {
+        try {
+            importService.resetErpnextData(sid);
+            model.addAttribute("success", "Données ERPNext réinitialisées !");
+            return "import";
+        } catch (Exception e) {
+            model.addAttribute("error", "Erreur lors du reset : " + e.getMessage());
+            return "import";
+        }
+    }
+
     @PostMapping("/employees")
     public ResponseEntity<?> importEmployees(@RequestParam("file") MultipartFile file,
                                            @CookieValue("sid") String sid) {
